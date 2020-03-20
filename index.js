@@ -54,18 +54,98 @@ function createStore(reducer) {
 // the most important part of the pure function are that they are predictable
 
 function todos(state = [], action) {
-  if (action.type === "ADD_TODO") {
-    state.concat([action.todo]);
+  switch (action.type) {
+    case "ADD_TODO":
+      return state.concat([action.todo]);
+    case "REMOVE_TODO":
+      return state.filter(val => {
+        return val.id !== action.id;
+      });
+    case "TOGGLE_TODO":
+      return state.map(val => {
+        return val.id !== action.id
+          ? val
+          : Object.assign({}, val, { completed: !val.completed });
+      });
+    default:
+      return state;
   }
-  return state;
 }
 
-const store = createStore(todos);
+function goals(state = [], action) {
+  switch (action.type) {
+    case "ADD_GOAL":
+      return state.concat([action.goal]);
+    case "REMOVE_GOAL":
+      return state.filter(val => {
+        return val.id !== action.id;
+      });
+    default:
+      return state;
+  }
+}
+
+function app(state = {}, action) {
+  console.log(state);
+  return {
+    todos: todos(state.todos, action),
+    goals: goals(state.goals, action)
+  };
+}
+
+const store = createStore(app);
 
 store.subscribe(() => {
-  console.log("The new state is :", store.getState);
+  console.log("The new state is :", store.getState());
 });
 
-store.subscribe(() => {
-  console.log("The store changed", store.getState);
+// store.subscribe(() => {
+//   console.log("The store changed", store.getState());
+// });
+
+/// testing commands
+
+store.dispatch({
+  type: "ADD_TODO",
+  todo: { id: 0, name: "learn redux", completed: true }
+});
+
+store.dispatch({
+  type: "ADD_TODO",
+  todo: { id: 1, name: "do homework", completed: true }
+});
+
+store.dispatch({
+  type: "ADD_TODO",
+  todo: { id: 2, name: "wash car", completed: false }
+});
+
+store.dispatch({
+  type: "REMOVE_TODO",
+  id: 1
+});
+
+store.dispatch({
+  type: "TOGGLE_TODO",
+  id: 2
+});
+
+store.dispatch({
+  type: "ADD_GOAL",
+  goal: { id: 0, name: "Babusoft web" }
+});
+
+store.dispatch({
+  type: "ADD_GOAL",
+  goal: { id: 1, name: "I QAZA APP" }
+});
+
+store.dispatch({
+  type: "ADD_GOAL",
+  goal: { id: 2, name: "PROJECT Z" }
+});
+
+store.dispatch({
+  type: "REMOVE_GOAL",
+  id: 2
 });
