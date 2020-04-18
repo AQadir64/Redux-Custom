@@ -6,40 +6,45 @@ const TOGGLE_TODO = "TOGGLE_TODO";
 const ADD_GOAL = "ADD_GOAL";
 const REMOVE_GOAL = "REMOVE_GOAL";
 
-function createStore(reducer) {
-  //four parts of the store
-  // 1) state of the store
-  // 2) get the state
-  // 3) listen to changes in state
-  // 4) update the state
+// library code for createStore just commit the below  code till --library code end
+//and remove Redux from create Store frunction call
 
-  let state;
-  let listeners = [];
+// function createStore(reducer) {
+//   //four parts of the store
+//   // 1) state of the store
+//   // 2) get the state
+//   // 3) listen to changes in state
+//   // 4) update the state
 
-  const getState = () => state;
+//   let state;
+//   let listeners = [];
 
-  const subscribe = (listener) => {
-    listeners.push(listener);
-    return () => {
-      listeners = listeners.filter((listen) => {
-        listen != listener;
-      });
-    };
-  };
+//   const getState = () => state;
 
-  const dispatch = (action) => {
-    state = reducer(state, action);
-    listeners.forEach((listen) => {
-      listen();
-    });
-  };
+//   const subscribe = (listener) => {
+//     listeners.push(listener);
+//     return () => {
+//       listeners = listeners.filter((listen) => {
+//         listen != listener;
+//       });
+//     };
+//   };
 
-  return {
-    getState,
-    subscribe,
-    dispatch,
-  };
-}
+//   const dispatch = (action) => {
+//     state = reducer(state, action);
+//     listeners.forEach((listen) => {
+//       listen();
+//     });
+//   };
+
+//   return {
+//     getState,
+//     subscribe,
+//     dispatch,
+//   };
+// }
+
+// --library code end
 
 // to increse the predictability of the state we have to set sort of rules for this
 // 1) only an event can change the state of store
@@ -93,15 +98,64 @@ function goals(state = [], action) {
   }
 }
 
-function app(state = {}, action) {
-  console.log(state);
-  return {
-    todos: todos(state.todos, action),
-    goals: goals(state.goals, action),
-  };
+//
+// library code for combine reducers
+//
+
+// function app(state = {}, action) {
+//   console.log(state);
+//   return {
+//     todos: todos(state.todos, action),
+//     goals: goals(state.goals, action),
+//   };
+// }
+
+// library code for combine reducer ends
+
+// / customizing dispatch
+
+function checkAndDispatch(store, action) {
+  if (action.type === ADD_TODO && action.todo.name.includes("bitcoin")) {
+    return alert("Nope thats a bad idea...");
+  }
+  if (action.type === ADD_GOAL && action.goal.name.includes("bitcoin")) {
+    return alert("Nope thats a bad idea...");
+  }
+  return store.dispatch(action);
 }
 
-const store = createStore(app);
+// custom middleware checker
+
+const checker = (store) => (next) => (action) => {
+  if (action.type === ADD_TODO && action.todo.name.includes("bitcoin")) {
+    return alert("Nope thats a bad idea...");
+  }
+  if (action.type === ADD_GOAL && action.goal.name.includes("bitcoin")) {
+    return alert("Nope thats a bad idea...");
+  }
+  return next(action);
+};
+
+// custom middleware logger
+
+const logger = (store) => (next) => (action) => {
+  console.group(action.type);
+  console.log("The action :", action);
+  const result = next(action);
+  console.log("the new state :", store.getState());
+  console.groupEnd();
+  return result;
+};
+
+/// Store code
+
+const store = Redux.createStore(
+  Redux.combineReducers({
+    todos,
+    goals,
+  }),
+  Redux.applyMiddleware(checker, logger)
+);
 
 store.subscribe(() => {
   const { todos, goals } = store.getState();
@@ -153,23 +207,23 @@ removeGoalAction = (id) => {
 
 /// testing commands
 
-// store.dispatch(addTodoAction({ id: 0, name: "learn redux", completed: true }));
+// store.dispatch( addTodoAction({ id: 0, name: "learn redux", completed: true }));
 
-// store.dispatch(addTodoAction({ id: 1, name: "do homework", completed: true }));
+// store.dispatch( addTodoAction({ id: 1, name: "do homework", completed: true }));
 
-// store.dispatch(addTodoAction({ id: 2, name: "wash car", completed: false }));
+// store.dispatch( addTodoAction({ id: 2, name: "wash car", completed: false }));
 
-// store.dispatch(toggleTodoAction(1));
+// store.dispatch( toggleTodoAction(1));
 
-// store.dispatch(removeTodoAction(2));
+// store.dispatch( removeTodoAction(2));
 
-// store.dispatch(addGoalAction({ id: 0, name: "Babusoft web" }));
+// store.dispatch( addGoalAction({ id: 0, name: "Babusoft web" }));
 
-// store.dispatch(addGoalAction({ id: 1, name: "I QAZA APP" }));
+// store.dispatch( addGoalAction({ id: 1, name: "I QAZA APP" }));
 
-// store.dispatch(addGoalAction({ id: 2, name: "PROJECT Z" }));
+// store.dispatch( addGoalAction({ id: 2, name: "PROJECT Z" }));
 
-// store.dispatch(removeTodoAction(2));
+// store.dispatch( removeTodoAction(2));
 
 //////////////////////////////////////////////////
 ////// ramdon id generator
@@ -198,7 +252,8 @@ const addTodo = () => {
   const name = input.value;
   input.value = "";
 
-  store.dispatch(
+  checkAndDispatch(
+    store,
     addTodoAction({
       name,
       completed: false,
@@ -212,7 +267,8 @@ const addGoal = () => {
   const name = input.value;
   input.value = "";
 
-  store.dispatch(
+  checkAndDispatch(
+    store,
     addGoalAction({
       name,
       id: makeid(5),
