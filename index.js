@@ -252,8 +252,7 @@ const addTodo = () => {
   const name = input.value;
   input.value = "";
 
-  checkAndDispatch(
-    store,
+  store.dispatch(
     addTodoAction({
       name,
       completed: false,
@@ -267,8 +266,7 @@ const addGoal = () => {
   const name = input.value;
   input.value = "";
 
-  checkAndDispatch(
-    store,
+  store.dispatch(
     addGoalAction({
       name,
       id: makeid(5),
