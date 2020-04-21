@@ -5,6 +5,7 @@ const REMOVE_TODO = "REMOVE_TODO";
 const TOGGLE_TODO = "TOGGLE_TODO";
 const ADD_GOAL = "ADD_GOAL";
 const REMOVE_GOAL = "REMOVE_GOAL";
+const RECIEVE_DATA = "RECIEVE_DATA";
 
 // library code for createStore just commit the below  code till --library code end
 //and remove Redux from create Store frunction call
@@ -80,6 +81,8 @@ function todos(state = [], action) {
           ? val
           : Object.assign({}, val, { completed: !val.completed });
       });
+    case RECIEVE_DATA:
+      return action.todos;
     default:
       return state;
   }
@@ -93,6 +96,17 @@ function goals(state = [], action) {
       return state.filter((val) => {
         return val.id !== action.id;
       });
+    case RECIEVE_DATA:
+      return action.goals;
+    default:
+      return state;
+  }
+}
+
+function loading(state = true, action) {
+  switch (action.type) {
+    case RECIEVE_DATA:
+      return false;
     default:
       return state;
   }
@@ -153,6 +167,7 @@ const store = Redux.createStore(
   Redux.combineReducers({
     todos,
     goals,
+    loading,
   }),
   Redux.applyMiddleware(checker, logger)
 );
@@ -202,6 +217,14 @@ removeGoalAction = (id) => {
   return {
     type: REMOVE_GOAL,
     id,
+  };
+};
+
+recieveDataAction = (todos, goals) => {
+  return {
+    type: RECIEVE_DATA,
+    todos,
+    goals,
   };
 };
 
