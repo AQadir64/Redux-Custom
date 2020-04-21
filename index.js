@@ -169,7 +169,7 @@ const store = Redux.createStore(
     goals,
     loading,
   }),
-  Redux.applyMiddleware(checker, logger)
+  Redux.applyMiddleware(ReduxThunk.default, checker, logger)
 );
 
 store.subscribe(() => {
@@ -187,6 +187,70 @@ store.subscribe(() => {
 // });
 
 // action functions
+
+appInitialData = () => {
+  return (dispatch) => {
+    Promise.all([API.fetchTodos(), API.fetchGoals()]).then(([todos, goals]) => {
+      dispatch(recieveDataAction(todos, goals));
+    });
+  };
+};
+
+handleAddGoal = (name, cb) => {
+  return (dispatch) => {
+    API.saveGoal(name)
+      .then((goal) => {
+        dispatch(addGoalAction(goal));
+        cb();
+      })
+      .catch(() => {
+        alert("error occured in adding goal");
+      });
+  };
+};
+
+handleAddTodo = (name, cb) => {
+  return (dispatch) => {
+    API.saveTodo(name)
+      .then((todo) => {
+        dispatch(addTodoAction(todo));
+        cb();
+      })
+      .catch(() => {
+        alert("error occured in adding todo");
+      });
+  };
+};
+
+handleDeleteGoal = (goal) => {
+  return (dispatch) => {
+    dispatch(removeGoalAction(goal.id));
+    API.deleteGoal(goal.id).catch(() => {
+      dispatch(addGoalAction(goal));
+      alert("error occured in deletation...");
+    });
+  };
+};
+
+handleDeleteTodo = (todo) => {
+  return (dispatch) => {
+    dispatch(removeTodoAction(todo.id));
+    API.deleteTodo(todo.id).catch(() => {
+      dispatch(addTodoAction(todo));
+      alert("error occured in deletation...");
+    });
+  };
+};
+
+handleToggle = (id) => {
+  return (dispatch) => {
+    dispatch(toggleTodoAction(id));
+    API.saveTodoToggle(id).catch(() => {
+      dispatch(toggleTodoAction(id));
+      alert("error occured in toggling...");
+    });
+  };
+};
 
 addTodoAction = (todo) => {
   return {
