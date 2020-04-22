@@ -49,19 +49,21 @@
           </ul>
         );
       }
+
+
       class Todos extends React.Component {
         addTodo = (e) => {
           e.preventDefault();
-          this.props.store.dispatch(
+          this.props.dispatch(
             handleAddTodo(this.input.value, () => (this.input.value = ""))
           );
         };
 
         toggleItem = (id) => {
-          this.props.store.dispatch(handleToggle(id));
+          this.props.dispatch(handleToggle(id));
         };
         removeItem = (todo) => {
-          this.props.store.dispatch(handleDeleteTodo(todo));
+          this.props.dispatch(handleDeleteTodo(todo));
         };
         render() {
           return (
@@ -82,15 +84,23 @@
           );
         }
       }
+
+
+      const ConnectedTodos = connect((state) => ({
+        todos: state.todos,
+      }))(Todos);
+
+
+
       class Goals extends React.Component {
         addGoal = (e) => {
           e.preventDefault();
-          this.props.store.dispatch(
+          this.props.dispatch(
             handleAddGoal(this.input.value, () => (this.input.value = ""))
           );
         };
         removeItem = (goal) => {
-          this.props.store.dispatch(handleDeleteGoal(goal));
+          this.props.dispatch(handleDeleteGoal(goal));
         };
         render() {
           return (
@@ -107,28 +117,89 @@
           );
         }
       }
+
+      const ConnectedGoals = connect((state) => ({
+        goals: state.goals,
+      }))(Goals);
+
+      function connect(mapStateToProps) {
+        return (Component) => {
+          class Reciever extends React.Component {
+            componentDidMount() {
+              const { subscribe } = this.props.store;
+
+              this.unsubscribe = subscribe(() => {
+                this.forceUpdate();
+              });
+            }
+            componentWillUnmount() {
+              this.unsubscribe();
+            }
+            render() {
+              const { dispatch, getState } = this.props.store;
+              const state = getState();
+              const stateNeeded = mapStateToProps(state);
+              console.log(Component, "sca");
+              console.log(stateNeeded, "sca");
+              return <Component {...stateNeeded} dispatch={dispatch} />;
+            }
+          }
+
+          class ConnectedComponent extends React.Component {
+            render() {
+              return (
+                <Context.Consumer>
+                  {(store) => <Reciever store={store} />}
+                </Context.Consumer>
+              );
+            }
+          }
+
+          return ConnectedComponent;
+        };
+      }
+
       class App extends React.Component {
         componentDidMount() {
-          const { store } = this.props;
+          const { dispatch } = this.props;
 
-          store.dispatch(appInitialData());
-
-          store.subscribe(() => this.forceUpdate());
+          dispatch(appInitialData());
         }
         render() {
-          const { store } = this.props;
-          const { todos, goals, loading } = store.getState();
-          return loading ? (
+          return this.props.loading ? (
             <h1>loading...</h1>
           ) : (
             <div>
-              <Todos todos={todos} store={this.props.store} />
-              <Goals goals={goals} store={this.props.store} />
+              <ConnectedTodos />
+              <ConnectedGoals />
             </div>
           );
         }
       }
-      ReactDOM.render(<App store={store} />, document.getElementById("app"));
+
+      const ConnectedApp = connect((state) => ({
+        loading: state.loading,
+      }))(App);
+
+      const Context = React.createContext();
+
+      class Provider extends React.Component {
+        render() {
+          return (
+            <Context.Provider value={this.props.store}>
+              {console.log(this.props.children)}
+              {this.props.children}
+            </Context.Provider>
+          );
+        }
+      }
+
+      ReactDOM.render(
+        <Provider store={store}>
+          <ConnectedApp />
+        </Provider>,
+        document.getElementById("app")
+      );
     </script>
     <script src="./index.js"></script>
   </body>
