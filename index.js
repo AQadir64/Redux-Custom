@@ -337,8 +337,14 @@ const goalBtn = document.querySelector("#goalBtn");
 const addTodo = () => {
   const input = document.querySelector("#todo");
   const name = input.value;
-  input.value = "";
 
+  recieveDataAction = (todos, goals) => {
+    return {
+      type: RECIEVE_DATA,
+      todos,
+      goals,
+    };
+  };
   store.dispatch(
     addTodoAction({
       name,
